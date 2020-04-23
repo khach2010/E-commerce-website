@@ -1,6 +1,8 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 
 const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
   res.send(
@@ -16,7 +18,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/", (req, res) => {
-  res.send("Account created");
+  console.log(req.body);
 });
 
 app.listen(3000, () => {
