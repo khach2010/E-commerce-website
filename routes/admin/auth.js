@@ -1,38 +1,57 @@
 const express = require("express");
+const { check, validationResult } = require("express-validator");
 const usersRepo = require("../../repository/users");
+const signupTemplate = require("../../views/admin/auth/signup");
+const signinTemplate = require("../../views/admin/auth/signin");
 const router = express.Router();
 
 router.get("/signup", (req, res) => {
-  res.send(
-    `<p>Your ID is:${req.session.userID}</p>
-    <div>
-      <form method="POST">
-        <input name="email" placeholder="email"></input>
-        <input name="password" placeholder="password"></input>
-        <input name="passwordConfirmation" placeholder="password confirm"></input>
-        <button>Sign Up</button>
-      </form>
-    </div>`
-  );
+  res.send(signupTemplate({ req }));
 });
 
-router.post("/signup", async (req, res) => {
-  const { email, password, passwordConfirmation } = req.body;
-  const existingUser = await usersRepo.getOneBy({ email });
-  if (existingUser) {
-    return res.send("This email is already in used!");
-  }
-  if (password !== passwordConfirmation) {
-    return res.send("password must match");
-  }
-  //Create a user in our user repo represent this person
-  const user = await usersRepo.create({ email, password });
+router.post(
+  "/signup",
+  [
+    check("email")
+      .trim()
+      .normalizeEmail()
+      .isEmail()
+      .custom(async email => {
+        const existingUser = await usersRepo.getOneBy({ email });
+        if (existingUser) {
+          throw new Error("Email in use");
+        }
+      }),
+    check("password")
+      .trim()
+      .isLength({ min: 4, max: 20 }),
+    check("passwordConfirmation")
+      .trim()
+      .isLength({ min: 4, max: 20 })
+      .custom((passwordConfirmation, { req }) => {
+        if (passwordConfirmation !== req.body.password) {
+          throw new Error("Passwords must mactch");
+        }
+      })
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    console.log(errors);
 
-  //Store the id of that user inside the users cookie
-  req.session.userID = user.id;
+    const { email, password, passwordConfirmation } = req.body;
 
-  res.send("Account created");
-});
+    if (password !== passwordConfirmation) {
+      return res.send("password must match");
+    }
+    //Create a user in our user repo represent this person
+    const user = await usersRepo.create({ email, password });
+
+    //Store the id of that user inside the users cookie
+    req.session.userID = user.id;
+
+    res.send("Account created");
+  }
+);
 // ------ SIGN OUT route ---------
 router.get("/signout", (req, res) => {
   req.session = null;
@@ -41,15 +60,7 @@ router.get("/signout", (req, res) => {
 
 //----- SIGN IN route -----------
 router.get("/signin", (req, res) => {
-  res.send(
-    `<div>
-      <form method="POST">
-        <input name="email" placeholder="email"></input>
-        <input name="password" placeholder="password"></input>
-        <button>Sign In</button>
-      </form>
-    </div>`
-  );
+  res.send(signinTemplate());
 });
 router.post("/signin", async (req, res) => {
   const { email, password } = req.body;
