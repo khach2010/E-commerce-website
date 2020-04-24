@@ -11,5 +11,15 @@
     "email": "test2@test.com",
     "password": "1234",
     "id": "98080ad6"
+  },
+  {
+    "email": "test4@test.com",
+    "password": "password",
+    "id": "85e625c0"
+  },
+  {
+    "email": "test5@test.com",
+    "password": "373a3a44f806c834c675581317b74120fd73ad6f1dc06376096f53ccdc2720e18c512d1cba3f34b9bfaa4644ce2718b6160ef3c62d61f69a865729608f499382.deb366bc41a6def0",
+    "id": "553a0877"
   }
 ]
