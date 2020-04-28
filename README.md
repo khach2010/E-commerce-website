@@ -1,1 +1,1 @@
-# E-commerce-website for A restaurant
+# E-commerce-website
