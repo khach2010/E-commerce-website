@@ -5,7 +5,7 @@ const { handelErrors, requireAuth } = require("./middelwares");
 const productsRepo = require("../../repository/products");
 const productsNewTemplate = require("../../views/admin/products/new");
 const productsIndexTemplate = require("../../views/admin/products/index");
-const productEditTemplate = require("../../views/admin/products/edit");
+const productsEditTemplate = require("../../views/admin/products/edit");
 const { requireTitle, requirePrice } = require("./validator");
 
 const router = express.Router();
@@ -39,8 +39,28 @@ router.get("/admin/products/:id/edit", requireAuth, async (req, res) => {
   if (!product) {
     return res.send("product not found");
   } else {
-    res.send(productEditTemplate({ product }));
+    res.send(productsEditTemplate({ product }));
   }
 });
+
+router.post(
+  "/admin/products/:id/edit",
+  requireAuth,
+  upload.single("image"),
+  [requireTitle, requirePrice],
+  handelErrors(productsEditTemplate),
+  async (req, res) => {
+    const changes = req.body;
+    if (req.file) {
+      changes.image = req.file.buffer.toString("base64");
+    }
+    try {
+      await productsRepo.update(req.params.id, changes);
+    } catch (err) {
+      return res.send("Could not found item");
+    }
+    res.redirect("/admin/products");
+  }
+);
 
 module.exports = router;
